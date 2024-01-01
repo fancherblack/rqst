@@ -1,0 +1,8 @@
+<nav search_view="search" color="#AA0114">
+ <view name="user_workspace" default='true' />
+  <a href="/app/rqst/request_html">New Request</a>
+  <view name="request_center" />
+ <view name="activity" />
+ <view name="resources" />
+ <view name="cost" />
+</nav>

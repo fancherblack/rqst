@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>New Request</title>  
+
+    <link rel="shortcut icon" href="/en-US/static/@A14849BC7DD0A49696AD976A65513B64161C46F54CC292784FC0E790CF1CB8FC.479/img/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="{{SPLUNKWEB_URL_PREFIX}}/static/build/css/bootstrap-enterprise.css" />
+    <link rel="stylesheet" type="text/css" href="{{SPLUNKWEB_URL_PREFIX}}/static/build/css/splunkjs-dashboard.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/chosen.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/rqst.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/bootstrap-dark.css" />
+
+    <meta name="referrer" content="never" />
+    <meta name="referrer" content="no-referrer" />
+    
+          <script>
+                window._splunk_metrics_events = {
+                   push : function() {},
+                   active: false,
+                   }
+          </script>
+
+          <style>
+
+          #row4 h3, #row6 h3 {
+              padding-left: 0;
+          }
+
+          #group_access_chosen .chosen-choices, #group_access_chosen .chosen-container {
+              width: 800px;
+              min-width: 800px;
+              max-width: 800px;
+          }
+
+          textarea#admin_notes {
+                width: 800px !important;
+            }
+
+          .dashboard-row .dashboard-panel .panel-body {
+                width: 1150px;
+                min-width: 1150px;
+                max-width: 1150px;
+          }
+
+          </style>
+
+  </head>
+<body class="request-form simplexml preload locale-en" data-splunk-version="7.1.0" data-splunk-product="enterprise">
+<!--
+BEGIN LAYOUT
+This section contains the layout for the dashboard. Splunk uses proprietary
+styles in <div> tags, similar to Bootstrap's grid system.
+-->
+<header>
+    <a aria-label="Screen reader users, click here to skip the navigation bar" class="navSkip" href="#navSkip" tabIndex="1">Skip Navigation &gt;</a>
+    <div class="header splunk-header">
+            <div id="placeholder-splunk-bar">
+                <a href="{{SPLUNKWEB_URL_PREFIX}}/app/launcher/home" class="brand" title="splunk &gt; listen to your data">splunk<strong>&gt;</strong></a>
+            </div>
+                <div id="placeholder-app-bar"></div>
+    </div>
+    <a id="navSkip"></a>
+</header>
+<div class="dashboard-body container-fluid main-section-body" data-role="main">
+    <div class="dashboard-header clearfix">
+        <h2>New Request</h2>
+        <p>Use the form below to submit a request for each data source (source type).</p>
+    </div>
+
+
+    <div id="row1" class="dashboard-row dashboard-row1">
+        <div id="panel1" class="dashboard-cell" style="width: 444px;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element1" class="dashboard-element html">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><div class="dashboard-cell" style="width: 444px;"><div class="dashboard-panel" style="width: 444px; min-height: 120px;"><div class="panel-body"><h3><li class="icon-clock icon"></li> Priority</h3><p>What is the priority?</p><div class="form-group"><select class="required_field" id="priority"><option value="" diabled selected>Select Priority</option></select></div></div></div></div><div class="dashboard-cell" style="width: 444px;"><div class="dashboard-panel" style="width: 444px; min-height: 120px;"><div class="panel-body"><h3><li class="icon-calendar icon"></li> Date Needed</h3><p>When is the data needed?</p><div class="form-group"><input type="text" id="datepicker"  class="required_field"></div></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row2" class="dashboard-row dashboard-row2">
+        <div id="panel2" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element2" class="dashboard-element html" style="width: 60%;">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel" style=""><div class="panel-body"><h3><li class="icon-pencil icon"></li> Data Short Description</h3><p>What is this data source?</p><div class="form-group"><input type="text" id="data_description" class="required_field"></div></div></div></div><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel" style=""><div class="panel-body"><h3><li class="icon-list icon"></li> Use Case</h3><p>What is the use case?</p><div class="form-group"><select id="use_case" class="required_field"><option value="" disabled selected>Select Use Case</option></select></div></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row3" class="dashboard-row dashboard-row3">
+        <div id="panel3" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element3" class="dashboard-element html" style="width: 60%;">
+                        <div class="panel-body html">
+                                <div class="dashboard-row">
+                                    <div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel" style=""><div class="panel-body"><h3><li class="icon-data icon"></li> Estimated Data Volume</h3><p>What is the expected data volume (GB/day)?</p><div class="form-group"><input type="number" id="data_volume_value"  class="required_field"><button type="button" class="icon-gear icon" id="data_volume" data-toggle="modal" data-target="#myModal"></button></div><p id="est_charges"></p></div></div></div><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel" style=""><div class="panel-body"><h3><li class="icon-data-input icon"></li> Data Transport</h3><p>How will the data be delivered?</p><div class="form-group"><select id="data_transport" class="required_field"><option value="" disabled selected>Select Transport Method</option></select></div></div></div></div>
+                                </div>
+                                
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row4" class="dashboard-row dashboard-row4">
+        <div id="panel4" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element4" class="dashboard-element html" style="width: 60%;">
+                        <div class="panel-body html">
+                                <div class="dashboard-row">
+                                    
+                                    <div class="dashboard-cell" style="width: 50%;">
+                                        <div class="dashboard-panel" style="">
+                                            <div class="panel-body">
+                                                <h3 id="custom_field_label"><li class="icon-gear icon"></li></h3>
+                                                <p id="custom_field_description"></p>
+                                                <div class="form-group">
+                                                    <select id="custom_field">
+                                                        <option value="" disabled selected></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                                <div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel" style=""><div class="panel-body"><h3><li class="icon-distributed-environment icon"></li> System Hostnames</h3><p>What systems will send this data?</p><div class="form-group"><select id="data_hostnames" multiple></select></div></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row5" class="dashboard-row dashboard-row5">
+        <div id="panel5" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                <div class="panel-element-row">
+                    <div id="element5" class="dashboard-element html" style="width: 60%;">
+                        <div class="panel-body html">
+                            <div class="dashboard-row">
+                                <div class="dashboard-cell" style="width: 50%;">
+                                    <div class="dashboard-panel" style="">
+                                        <div class="panel-body">
+                                            <h3><li class="icon-user icon"></li> Group Access</h3>
+                                            <p>Who should have access to this data?</p>
+                                            <div class="form-group">
+                                                <select id="group_access" multiple  ></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row6" class="dashboard-row dashboard-row6">
+        <div id="panel6" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element6" class="dashboard-element html" style="width: 60%;">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><div class="dashboard-cell" style="width: 100%;"><div class="dashboard-panel" style="width: 100%;"><div class="panel-body" style="width: 100%;"><h3><li class="icon-info-circle icon"></li> Notes</h3><p>Provide additional information or context relating to this request or data source.</p><div class="form-group"><textarea class="form-control" rows="7" id="admin_notes"></textarea>
+                                </div></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row7" class="dashboard-row dashboard-row7">
+        <div id="panel7" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                <div class="panel-element-row">
+                    <div id="element7" class="dashboard-element html" style="width: 60%;">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><div class="dashboard-cell" style="width: 100%;"><div class="dashboard-panel" style="width: 100%;"><div class="panel-body" style="width: 100%;">
+                                    <button id="submit_button" type="button" class="btn btn-primary submit">Create Request</button>
+                                </div></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="myModal" style="z-index:0;">
+        <div class="modal-header">
+            <button type="button" class="close" data-toggle="modal" aria-hidden="true" data-target="#myModal">&times;</button>
+            <h3>Data Volume</h3>
+        </div>
+        <div class="modal-body">
+            <div id="volume_container">
+                <div class="dashboard-cell">
+                    <div class="dashboard-panel">
+                        <p>Events Per Second</p>
+                        <div class="form-group">
+                            <input type="number" id="eps">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-cell">
+                    <div class="dashboard-panel">
+                        <p>Event Size (Bytes)</p>
+                        <input type="number" value="500" id="event_size">
+                    </div>
+                </div>
+
+                <div class="dashboard-cell">
+                    <div class="dashboard-panel">
+                        <p>GB/day</p>
+                        <input type="number" id="gb_per_day" disabled step="any">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" id="volume_submit" class="btn btn-default">Submit</button>
+        </div>
+</div>
+
+<!--
+END LAYOUT
+-->
+
+<script src="{{SPLUNKWEB_URL_PREFIX}}/config?autoload=1" crossorigin="use-credentials"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/static/js/i18n.js"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/i18ncatalog?autoload=1"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/static/build/simplexml/index.js"></script>
+<script src="/en-US/static/app/rqst/js/purify.js"></script>
+<script src="/en-US/static/app/rqst/js/create_request.js"></script>
+<script src="/en-US/static/app/rqst/js/chosen.jquery.js"></script>
+<script src="/en-US/static/app/rqst/dashboard.js"></script>
+      
+</body>
+</html>

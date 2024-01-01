@@ -1,0 +1,277 @@
+/*
+
+rqst - Light Stylesheet
+Wouldn't you rather embrace the dark side?
+
+*/
+
+body, .dashboard-body, .panel-body, .panel-body .html, .main-section-body {
+    background: #f2f4f5 !important;
+}
+
+body a:hover, .dashboard-body a:hover {
+    text-decoration: underline;
+}
+
+#header ul li a, ul li a, ul a {
+    color: #e82e2e;
+}
+
+p {
+    font-size: 14.5px;
+}
+
+h2.panel-title {
+	text-align: center;
+	padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+h3 {
+    font-size: 17.5px !important;
+    font-weight: lighter !important;
+}
+
+li.icon {
+    display: inline;
+    list-style-type: none;
+    color: #e82e2e;
+}
+
+.dashboard-header {
+    margin-left: 10px;
+}
+
+.library_request_panel {
+    font-size: 1.44em;
+    padding: 0;
+    margin: 0;
+    line-height: 1.55em;
+    padding: 44px;
+}
+
+.library_data_container {
+    font-size: 1.44em;
+    padding: 0;
+    margin: 0;
+    padding: 44px;
+    width: 80%;
+}
+
+#myModal {
+    margin-top: 10%;
+}
+
+.modal.show {
+    opacity: 1;
+    top: 30%;
+}
+
+.modal-backdrop.fade {
+    opacity: .5;
+}
+
+#myModal .dashboard-panel {
+    background: #fff !important;
+ }
+
+.volume_label {
+    position: absolute;
+    top: 95px;
+    left: 155px;
+}
+
+#data_volume_volume {
+    position: relative;
+}
+
+#confirmation_panel {
+    transition: 1s opacity;
+    text-align: left;
+    font-size: 14px;
+}
+
+.dashboard-row .dashboard-panel .panel-body {
+    overflow: visible;
+    background: #f2f4f5 !important;
+}
+
+.dashboard-row7 {
+    margin-top: 25px;
+}
+
+.dashboard-row6 {
+    margin-top: 0;
+}
+
+.chosen-drop {
+    position: absolute;
+}
+
+.hidden {
+    display: none;
+}
+
+.fieldset {
+    display: none;
+    min-height: 0;
+    height: 0;
+}
+
+#row4 h3, #row6 h3 {
+    padding-left: 10px;
+}
+
+#row4 h3 {
+    padding-left: 10px;
+}
+
+.dashboard-cell {
+    margin-bottom: 0;
+}
+
+#admin_owner, #status, #data_tags, #admin_sourcetype, #admin_index  {
+    margin: 0 0;
+    padding: 0 0;
+}
+
+.chosen-container .chosen-drop {
+    background: #f2f4f5;
+    color: #000000;
+}
+
+input, select, .chosen-container, ul.chosen-choices  {
+    width: 220px;
+    border-radius: 2.5px;
+    height: 37.5px ;
+    min-height: 37.5px;
+    font-family: Splunk Platform Sans,Proxima Nova,Roboto,Droid,Helvetica Neue,Helvetica,Arial,sans-serif !important;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.default {
+    margin-left: 10px;
+}
+
+ul.chosen-choices {
+    padding-left: 5px;
+    padding-top: 5px;
+}
+
+#data_hostnames_chosen .chosen-choices, #group_access_chosen .chosen-choices, #data_tags_chosen .chosen-choices, input#gb_per_day {
+    border: 1px solid #c3cbd4;
+}
+
+button.submit {
+    position: relative;
+    display: inline-block;
+    left: -10px;
+    padding-left: 20px;
+}
+
+ul.chosen-choices li.search-choice {
+    display: inline-block;
+    background-image: none !important;
+    padding-top: 7.5px !important; 
+    padding-bottom: 5px !important;
+    margin-top: 5px !important;
+    margin-bottom: 5px !important;
+}
+
+.chosen-search-input {
+    color: #333333;
+}
+
+#input1 {
+    display: none;
+    margin-left: 10px;
+}
+
+.dashboard-row7 {
+    margin-top: 25px;
+}
+
+.dashboard-row6 {
+    margin-top: 0;
+}
+
+small {
+    color: #333333;
+}
+
+#data_transport, #use_case, #priority, #data_description, #group_access  {
+    margin: 0 0;
+    padding: 0 0;
+}
+
+#data_hostnames_chosen {
+    width: 220px !important;
+}
+
+#group_access_chosen {
+    width: 84% !important;
+}
+
+textarea#admin_notes {
+    width: 67.5% !important;
+}
+
+input#datepicker, input#data_description, input#data_volume_value {
+    width: 220px !important;
+}
+
+input#data_description {
+    padding-left: 10px !important;
+}
+
+input#data_sample, button#data_volume, .custom-file-input {
+    border: none !important;
+}
+
+select#priority, select#use_case, select#data_transport {
+    height: 37.5px !important;
+}
+
+button.submit {
+    position: relative;
+    display: inline-block;
+    left: -10px;
+    padding-left: 10px;
+}
+
+button.icon-gear {
+    border: none;
+    padding-top: 0;
+    margin-top: -6px;
+    font-size: 18px;
+    background: #f2f4f5;
+}
+
+.dashboard-panel {
+    width: 80%;
+    display: table;
+    border-radius: 2.5px;
+    min-height: 80px !important;
+    background: #f2f4f5 !important;
+}
+
+#admin_owner, #status, #data_tags, #admin_sourcetype, #admin_index  {
+    margin: 0 0;
+    padding: 0 0;
+}
+
+#input1 {
+    margin-left: 10px;
+}
+
+.cancel_button {
+    left: -25px;
+}
+
+button li.icon {
+}
+
+li.warning {
+    color: #e82e2e !important;
+}

@@ -1,0 +1,683 @@
+<form theme="dark" script="js/request_popper.js">
+  <search id="init_option_search">
+    <query>| inputlookup rqst_kv_options | head 1 | table kvkit_server</query>
+    <earliest>1</earliest>
+    <latest>now</latest>
+    <finalized>
+      <condition match=" 'job.resultCount' != 0">
+        <set token="kvkit_server">$result.kvkit_server$</set>
+      </condition>
+      <condition>
+        <set token="badness">1</set>
+      </condition>
+    </finalized>
+  </search>
+  <search id="cost_base">
+    <query>
+| inputlookup rqst_kv_data
+| eval data_tags=case(data_tags=="","Unassigned",isnotnull(data_tags),data_tags)
+| eval custom_field=case(custom_field=="","Unassigned",isnotnull(custom_field),custom_field)
+| rex mode=sed field=data_tags "s/,\s/,/g"
+| makemv delim="," data_tags
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$) data_tags IN ($data_tags$) custom_field="$custom_field$"
+[| rest /services/authentication/users
+ | search title IN ($requestor_user$)
+[| inputlookup rqst_kv_groups
+ | search group_alias IN ("$group_alias$")
+ | rename splunk_role AS roles
+ | fields + roles]
+ | dedup title
+ | rename title AS requestor_user 
+ | fields + requestor_user]
+| addinfo
+| eval timestamp = strptime(timestamp,"%Y-%m-%d %H:%M:%S")
+| where ((timestamp &lt; info_max_time OR info_max_time="+Infinity") AND (timestamp &gt; info_min_time))
+| table timestamp requestor_user admin_user requestor_realname data_id data_volume data_description  data_transport status priority due_date data_tags use_case
+    </query>
+    <earliest>$timerange.earliest$</earliest>
+    <latest>$timerange.latest$</latest>
+  </search>
+  <search>
+    <query>| inputlookup rqst_kv_options | head 1 | table custom_field_label custom_field_values show_custom_field</query>
+    <earliest>0</earliest>
+    <latest>now</latest>
+    <finalized>
+      <condition match=" 'job.resultCount' !=0">
+        <set token="custom_field_label">$result.custom_field_label$</set>
+        <set token="show_custom_field">true</set>
+      </condition>
+    </finalized>
+  </search>
+  <search>
+    <query>| inputlookup rqst_kv_options | head 1 | table show_custom_field</query>
+    <finalized>
+      <condition match="$result.show_custom_field$ == &quot;false&quot;">
+        <unset token="show_custom_field"></unset>
+      </condition>
+    </finalized>
+  </search>
+  <label>Financial Impact</label>
+  <description>Approximation of request costs based on license, storage, and indexer settings.</description>
+  <search id="option_search">
+    <query>| inputlookup rqst_kv_options  | head 1 | rex mode=sed field=use_case "s/,\s/,/g"</query>
+    <earliest>1</earliest>
+    <latest>now</latest>
+    <finalized>
+      <condition match=" 'job.resultCount' != 0">
+        <set token="cost_per_indexer">$result.cost_per_indexer$</set>
+        <set token="cost_per_license_gb">$result.cost_per_license_gb$</set>
+        <set token="cost_per_tb_storage">$result.cost_per_tb_storage$</set>
+        <set token="indexer_daily_ingest_target">$result.indexer_daily_ingest_target$</set>
+        <set token="replication_factor">$result.replication_factor$</set>
+        <set token="search_factor">$result.search_factor$</set>
+      </condition>
+      <condition>
+        <set token="badness">1</set>
+      </condition>
+    </finalized>
+  </search>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="dropdown" token="group_alias" searchWhenChanged="true">
+      <label>Group</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>group_alias</fieldForLabel>
+      <fieldForValue>group_alias</fieldForValue>
+      <search>
+        <query>| rest /services/authentication/users
+| search *
+    [| inputlookup rqst_kv_data 
+    | search origin=request
+    | rename requestor_user AS title
+    | table title]
+| dedup title
+| mvexpand roles
+| dedup roles
+| lookup rqst_kv_groups splunk_role AS roles OUTPUT group_alias
+| dedup group_alias
+| sort + group_alias
+| table group_alias</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+    <input type="multiselect" token="requestor_user" searchWhenChanged="true">
+      <label>Requestor</label>
+      <choice value="*">Any</choice>
+      <fieldForLabel>requestor_realname</fieldForLabel>
+      <fieldForValue>requestor_user</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search origin=request status!=Complete status!=Rejected
+    [| inputlookup rqst_kv_data
+    | search origin=request
+        [| rest /services/authentication/users
+        | search title=*
+            [| inputlookup rqst_kv_groups
+            | search group_alias = "$group_alias$"
+            | rename splunk_role AS roles
+            | fields + roles]
+        | dedup title
+        | rename title AS requestor_user 
+        | fields + requestor_user]]
+| dedup requestor_user
+| fields + requestor_user requestor_realname</query>
+      </search>
+      <delimiter> </delimiter>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="multiselect" token="status" searchWhenChanged="true">
+      <label>Status</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>status</fieldForLabel>
+      <fieldForValue>status</fieldForValue>
+      <default>*</default>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search data_id=*
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup status
+| sort + status
+| table status</query>
+      </search>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="priority" searchWhenChanged="true">
+      <label>Priority</label>
+      <choice value="*">Any</choice>
+      <fieldForLabel>priority</fieldForLabel>
+      <fieldForValue>priority</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search origin=request status IN ($status$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup priority
+| sort + priority
+| table priority</query>
+      </search>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="use_case" searchWhenChanged="true">
+      <label>Use Case</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>use_case</fieldForLabel>
+      <fieldForValue>use_case</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search status IN ($status$) priority IN ($priority$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup use_case
+| sort use_case
+| fields + use_case</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="data_tags" searchWhenChanged="true">
+      <label>Data Tags</label>
+      <fieldForLabel>data_tags</fieldForLabel>
+      <fieldForValue>data_tags</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| rex mode=sed field=data_tags "s/,\s/,/g"
+| makemv delim="," data_tags
+| mvexpand data_tags
+| dedup data_tags
+| sort data_tags
+| fields + data_tags</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> </delimiter>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="custom_field" depends="$show_custom_field$">
+      <label>$custom_field_label$</label>
+      <fieldForLabel>custom_field</fieldForLabel>
+      <fieldForValue>custom_field</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data where custom_field != ""
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$) data_tags IN ($data_tags$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| mvexpand custom_field
+| dedup custom_field
+| fields custom_field</query>
+      </search>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <default>*</default>
+    </input>
+    <input type="dropdown" token="period" searchWhenChanged="true">
+      <label>Storage Calculation</label>
+      <choice value="365">Annually</choice>
+      <choice value="90">Quarterly</choice>
+      <choice value="30">Monthly</choice>
+      <choice value="1">Daily</choice>
+      <initialValue>365</initialValue>
+    </input>
+    <input type="text" token="indexer_daily_target" searchWhenChanged="true">
+      <label>Indexer Daily Target (GB/day)</label>
+      <default>$indexer_daily_ingest_target$</default>
+    </input>
+    <input type="text" token="replication_factor" searchWhenChanged="true">
+      <label>Replication Factor</label>
+      <default>$replication_factor$</default>
+    </input>
+    <input type="text" token="search_factor" searchWhenChanged="true">
+      <label>Search Factor</label>
+      <default>$search_factor$</default>
+    </input>
+    <input type="text" token="compression_factor" searchWhenChanged="true">
+      <label>Compression Factor</label>
+      <default>.15</default>
+    </input>
+    <input type="text" token="metadata_factor" searchWhenChanged="true">
+      <label>Metadata Factor</label>
+      <default>.35</default>
+    </input>
+    <input type="time" token="timerange" searchWhenChanged="true">
+      <label>Request Time Range</label>
+      <default>
+        <earliest>0</earliest>
+        <latest></latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Daily Data Volume</title>
+      <single>
+        <search base="cost_base">
+          <query>| stats sum(data_volume)</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">50</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">requested license</option>
+        <option name="unit">GB/day</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>License Cost</title>
+      <single>
+        <search base="cost_base">
+          <query>
+| stats sum(data_volume) AS data_volume
+| eval estimated_license_cost = data_volume * $cost_per_license_gb$
+| table estimated_license_cost</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">50</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">license cost at $cost_per_license_gb$/GB</option>
+        <option name="unit">$</option>
+        <option name="unitPosition">before</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Indexer Load</title>
+      <single>
+        <search base="cost_base">
+          <query>
+| eventstats sum(data_volume) AS request_data_volume
+| eval estimated_indexer_requirement = round((data_volume / $indexer_daily_target$), 2)
+| stats sum(estimated_indexer_requirement)</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">50</option>
+        <option name="numberPrecision">0.0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">IDXL</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Indexer Cost</title>
+      <single>
+        <search base="cost_base">
+          <query>
+| eventstats sum(data_volume) AS request_data_volume
+| eval estimated_indexer_requirement = round((data_volume / $indexer_daily_target$), 1)
+| eval estimated_indexer_cost = (estimated_indexer_requirement * $cost_per_indexer$)
+| stats sum(estimated_indexer_cost)</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">51</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">indexer cost at $cost_per_indexer$/indexer</option>
+        <option name="unit">$</option>
+        <option name="unitPosition">before</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Storage Requirement</title>
+      <single>
+        <search base="cost_base">
+          <query>
+| stats sum(data_volume) AS request_data_volume
+| eval rf_calc = case($replication_factor$&gt;1, $replication_factor$, $replication_factor$&lt;=1, "0")
+| eval sf_calc = case($search_factor$&gt;=1, $search_factor$, $search_factor$&lt;=1, "0")
+| eval request_raw_data = (request_data_volume * $compression_factor$)
+| eval request_repl_data = request_raw_data * rf_calc
+| eval request_searchable_data = ((request_data_volume * $metadata_factor$) + request_data_volume) * sf_calc
+| eval request_total_storage = round(request_repl_data + request_searchable_data,2) * $period$
+| eval request_total_storage = request_total_storage / 1024
+| stats sum(request_total_storage)</query>
+        </search>
+        <option name="height">52</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">0</option>
+        <option name="trellis.size">large</option>
+        <option name="underLabel">estimated storage over $period$ day(s)</option>
+        <option name="unit">TB</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Storage Cost</title>
+      <single>
+        <search base="cost_base">
+          <query>
+| stats sum(data_volume) AS request_data_volume
+| eval rf_calc = case($replication_factor$&gt;1, $replication_factor$, $replication_factor$&lt;=1, "0")
+| eval sf_calc = case($search_factor$&gt;=1, $search_factor$, $search_factor$&lt;=1, "0")
+| eval request_raw_data = (request_data_volume * $compression_factor$)
+| eval request_repl_data = request_raw_data * rf_calc
+| eval request_searchable_data = ((request_data_volume * $metadata_factor$) + request_data_volume) * sf_calc
+| eval request_total_storage = round(request_raw_data + request_searchable_data,2) * $period$
+| eval request_total_storage = request_total_storage / 1024
+| eval storage_cost = (request_total_storage * $cost_per_tb_storage$) 
+| table storage_cost</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">50</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">storage cost at $cost_per_tb_storage$/TB</option>
+        <option name="unit">$</option>
+        <option name="unitPosition">before</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Total Cost</title>
+      <single>
+        <search base="cost_base">
+          <query>
+| stats sum(data_volume) AS request_data_volume
+| eval rf_calc = case($replication_factor$&gt;1, $replication_factor$, $replication_factor$&lt;=1, "0")
+| eval sf_calc = case($search_factor$&gt;=1, $search_factor$, $search_factor$&lt;=1, "0")
+| eval request_raw_data = (request_data_volume * $compression_factor$)
+| eval request_repl_data = request_raw_data * rf_calc
+| eval request_searchable_data = ((request_data_volume * $metadata_factor$) + request_data_volume) * sf_calc
+| eval request_total_storage = round(request_raw_data + request_searchable_data,2) * $period$ / 1024
+| eval estimated_license_cost = (request_data_volume * $cost_per_license_gb$)
+| eval estimated_storage_cost = (request_total_storage * $cost_per_tb_storage$) 
+| eval estimated_indexer_requirement = round((request_data_volume / $indexer_daily_target$), 1)
+| eval estimated_indexer_cost = (estimated_indexer_requirement * $cost_per_indexer$)
+| eval estimated_total_cost = (estimated_indexer_cost + estimated_storage_cost + estimated_license_cost) 
+| table estimated_total_cost</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">50</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">total estimated cost</option>
+        <option name="unit">$</option>
+        <option name="unitPosition">before</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Estimated Request Resource Cost by User</title>
+      <chart>
+        <search base="cost_base">
+          <query>
+| eventstats sum(data_volume) AS request_data_volume BY data_id
+| eval rf_calc = case($replication_factor$&gt;1, $replication_factor$, $replication_factor$&lt;=1, "0")
+| eval sf_calc = case($search_factor$&gt;=1, $search_factor$, $search_factor$&lt;=1, "0")
+| eval request_raw_data = (request_data_volume * $compression_factor$)
+| eval request_repl_data = request_raw_data * rf_calc
+| eval request_searchable_data = ((request_data_volume * $metadata_factor$) + request_data_volume) * sf_calc
+| eval request_total_storage = round(request_raw_data + request_searchable_data,2) * $period$ / 1024
+| eval estimated_indexer_requirement = round((request_data_volume / $indexer_daily_target$), 1)
+| eval estimated_license_cost = request_data_volume * $cost_per_license_gb$
+| eval estimated_indexer_cost = (estimated_indexer_requirement * $cost_per_indexer$)
+| eval estimated_storage_cost = (request_total_storage * $cost_per_tb_storage$) 
+| stats sum(estimated_license_cost) AS "License" sum(estimated_storage_cost) AS "Storage" sum(estimated_indexer_cost) AS "Indexer" BY requestor_realname
+| sort - "License"</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Requestor</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">1</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">435</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Request Resources &amp; Costs Detail</title>
+        <search base="cost_base">
+          <query>
+| sort + due_date
+| eventstats sum(data_volume) AS request_data_volume BY data_id
+| eval rf_calc = case($replication_factor$&gt;1, $replication_factor$, $replication_factor$&lt;=1, "0")
+| eval sf_calc = case($search_factor$&gt;=1, $search_factor$, $search_factor$&lt;=1, "0")
+| eval request_raw_data = (request_data_volume * $compression_factor$)
+| eval request_repl_data = request_raw_data * rf_calc
+| eval request_searchable_data = ((request_data_volume * $metadata_factor$) + request_data_volume) * sf_calc
+| eval request_total_storage = round(request_repl_data + request_searchable_data,2) * $period$ / 1024
+| eval estimated_license_cost = (data_volume * $cost_per_license_gb$)
+| eval estimated_storage_cost = (request_total_storage * $cost_per_tb_storage$) 
+| eval estimated_indexer_requirement = round((data_volume / $indexer_daily_target$), 1)
+| eval estimated_indexer_cost = (estimated_indexer_requirement * $cost_per_indexer$)
+| eval estimated_total_cost = estimated_indexer_cost + estimated_storage_cost + estimated_license_cost
+| table data_id due_date status requestor_realname use_case priority data_volume estimated_license_cost request_total_storage estimated_storage_cost estimated_indexer_requirement estimated_indexer_cost estimated_total_cost
+| rename data_id AS ID due_date AS "Due Date" status AS Status requestor_realname AS Requestor data_description AS Description use_case AS Category priority AS Priority data_volume AS "Data Volume" estimated_license_cost AS "License" request_total_storage AS "Storage Required" estimated_storage_cost AS "Storage Cost" estimated_indexer_requirement AS "Indexers Required" estimated_indexer_cost AS "Indexer Cost" estimated_total_cost AS "Est. Total Cost"
+| addcoltotals labelfield=ID</query>
+        </search>
+        <option name="count">50</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">row</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="number" field="Est. Total Chargeback (Year 1)">
+          <option name="precision">0</option>
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="Annual Indexer Cost">
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="Annual Storage Cost">
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="Est. License Cost">
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="Request Data Volume">
+          <option name="precision">0</option>
+          <option name="unit">GB/day</option>
+        </format>
+        <format type="number" field="Annual Storage Requirement">
+          <option name="unit">TB/year</option>
+        </format>
+        <format type="number" field="Indexer Cost">
+          <option name="precision">0</option>
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="Storage Cost">
+          <option name="precision">0</option>
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="Storage Required">
+          <option name="precision">0</option>
+          <option name="unit">TB/year</option>
+        </format>
+        <format type="number" field="License">
+          <option name="precision">0</option>
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="Data Volume">
+          <option name="precision">0</option>
+          <option name="unit">GB/day</option>
+        </format>
+        <format type="color" field="Est. Total Chargeback (Year 1)">
+          <colorPalette type="minMidMax" maxColor="#DC4E41" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="number" field="Est. Total Cost (Year 1)">
+          <option name="precision">0</option>
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="Indexers Required">
+          <option name="precision">1</option>
+        </format>
+        <format type="color" field="Est. Total Cost (Year 1)">
+          <colorPalette type="minMidMax" maxColor="#DC4E41" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="number" field="Est. Total Cost">
+          <option name="unit">$</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/rqst/admin_view_request_html?form.data_id=$row.ID$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

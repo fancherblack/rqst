@@ -1,0 +1,93 @@
+[app/install/install_source_checksum]
+version = 8.0.3
+modtime = 1595879084.958352000
+
+[passwords/credential%3A%3Arqst_rest%3A]
+version = 8.0.3
+modtime = 1595882562.598174000
+
+[passwords]
+access = read : [ * ]
+export = system
+version = 8.0.3
+modtime = 1595882623.545360000
+
+[views/request_center]
+version = 8.0.3
+modtime = 1622985903.677778000
+
+[views/activity]
+version = 8.0.3
+modtime = 1622985975.720437000
+
+[views/resources]
+version = 8.0.3
+modtime = 1622986555.310021000
+
+[nav/default]
+version = 8.0.3
+modtime = 1607970973.372896000
+
+[transforms/rqst_kv_options]
+access = read : [ * ], write : [ admin, rqst_rest ]
+export = system
+owner = admin
+version = 8.0.3
+modtime = 1623005046.752174000
+
+[transforms/rqst_kv_groups]
+access = read : [ * ], write : [ admin, rqst_rest ]
+export = system
+owner = admin
+version = 8.0.3
+modtime = 1623005890.637569000
+
+[transforms/rqst_kv_data]
+access = read : [ * ], write : [ admin, rqst_rest ]
+export = system
+owner = admin
+version = 8.0.3
+modtime = 1623006043.096095000
+
+[views/user_workspace]
+access = read : [ * ], write : [ admin ]
+export = none
+owner = nobody
+version = 8.0.3
+modtime = 1622893370.506271000
+
+[transforms/rqst_kv_audit]
+access = read : [ * ], write : [ * ]
+export = none
+owner = nobody
+version = 8.0.3
+modtime = 1622928485.351747000
+
+[collections/rqst_data]
+access = read : [ * ], write : [ * ]
+export = none
+owner = admin
+version = 8.0.3
+modtime = 1595939533.516747000
+
+[views/cost]
+version = 8.0.3
+modtime = 1622986214.529988000
+
+[views/data_workspace_alt]
+access = read : [ * ], write : [ admin ]
+export = none
+owner = jay
+version = 8.0.3
+modtime = 1622890430.487137000
+
+[savedsearches/Populate%20Splunk%20Users%20Collection]
+version = 8.0.3
+modtime = 1623005801.412661000
+
+[views/user_workspace_alt]
+access = read : [ * ], write : [ admin ]
+export = none
+owner = jay
+version = 8.0.3
+modtime = 1623062744.451777000

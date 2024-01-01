@@ -1,0 +1,58 @@
+.icon-speech-bubble, .icon-plus-circle {
+    padding-top: 13px;
+}
+.floatyModal {
+    width: 750px !important;
+    height: 600px !important;
+    z-index: -1;
+    overflow: hidden;
+}
+.floatyModal-body {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+.showModal {
+    z-index: 1041;
+}
+.floatyClose {
+    z-index: 9999; 
+    position: absolute; 
+    top: 10px; 
+    right: 10px;
+    background: none;
+    border: none;
+}
+.floatyCloseX {
+    font-size: 24px; 
+    font-weight: 900;
+    color: #555;
+}
+.floatyCloseX:hover {
+    color: #007fff;
+}
+iframe {
+    width: 750px;
+    height: 600px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    overflow: hidden;
+}
+.float {
+    position: fixed;
+    width: 44px;
+    height: 44px;
+    bottom: 44px;
+    right: 44px;
+    background-color: #007fff;
+    color: #fff;
+    border-radius: 50px;
+    text-align: center;
+    box-shadow: 2px #999;
+    font-size: 22px;
+}
+.float:hover {
+    background-color: #65a637;
+    color: #fff;
+}

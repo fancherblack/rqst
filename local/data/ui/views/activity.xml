@@ -1,0 +1,641 @@
+<form theme="dark" script="js/request_popper.js">
+  <search id="option_search">
+    <query>| inputlookup rqst_kv_options | head 1 | table kvkit_server</query>
+    <earliest>1</earliest>
+    <latest>now</latest>
+    <finalized>
+      <condition match=" 'job.resultCount' != 0">
+        <set token="kvkit_server">$result.kvkit_server$</set>
+      </condition>
+      <condition>
+        <set token="badness">1</set>
+      </condition>
+    </finalized>
+  </search>
+  <search id="activity_base">
+    <query>
+| inputlookup rqst_kv_data
+| eval data_tags=case(data_tags=="","Unassigned",isnotnull(data_tags),data_tags)
+| eval custom_field=case(custom_field=="","Unassigned",isnotnull(custom_field),custom_field)
+| rex mode=sed field=data_tags "s/,\s/,/g"
+| makemv delim="," data_tags
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$) data_tags IN ($data_tags$) custom_field="$custom_field$"
+[| rest /services/authentication/users
+ | search title IN ($requestor_user$)
+[| inputlookup rqst_kv_groups
+ | search group_alias IN ("$group_alias$")
+ | rename splunk_role AS roles
+ | fields + roles]
+ | dedup title
+ | rename title AS requestor_user 
+ | fields + requestor_user]
+| addinfo
+| eval timestamp = strptime(timestamp,"%Y-%m-%d %H:%M:%S")
+| where ((timestamp &lt; info_max_time OR info_max_time="+Infinity") AND (timestamp &gt; info_min_time))
+| table timestamp requestor_user admin_user requestor_realname data_id data_volume data_description  data_transport status priority due_date data_tags use_case
+    </query>
+    <earliest>0</earliest>
+    <latest></latest>
+  </search>
+  <search>
+    <query>| inputlookup rqst_kv_options | head 1 | table custom_field_label custom_field_values show_custom_field</query>
+    <earliest>0</earliest>
+    <latest>now</latest>
+    <finalized>
+      <condition match=" 'job.resultCount' !=0">
+        <set token="custom_field_label">$result.custom_field_label$</set>
+        <set token="show_custom_field">true</set>
+      </condition>
+    </finalized>
+  </search>
+  <search>
+    <query>| inputlookup rqst_kv_options | head 1 | table show_custom_field</query>
+    <finalized>
+      <condition match="$result.show_custom_field$ == &quot;false&quot;">
+        <unset token="show_custom_field"></unset>
+      </condition>
+    </finalized>
+  </search>
+  <label>Request Activity</label>
+  <description>A summary of activity to better understand user needs and request trends.</description>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="dropdown" token="group_alias" searchWhenChanged="true">
+      <label>Group</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>group_alias</fieldForLabel>
+      <fieldForValue>group_alias</fieldForValue>
+      <search>
+        <query>| rest /services/authentication/users
+| search *
+    [| inputlookup rqst_kv_data
+    | search origin=request 
+    | rename requestor_user AS title
+    | table title]
+| dedup title
+| mvexpand roles
+| dedup roles
+| lookup rqst_kv_groups splunk_role AS roles OUTPUT group_alias
+| dedup group_alias
+| sort + group_alias
+| table group_alias</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+    <input type="multiselect" token="requestor_user" searchWhenChanged="true">
+      <label>Requestor</label>
+      <choice value="*">Any</choice>
+      <fieldForLabel>requestor_realname</fieldForLabel>
+      <fieldForValue>requestor_user</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search data_id=*
+[| rest /services/authentication/users
+ | search title=*
+[| inputlookup rqst_kv_groups
+ | search group_alias = "$group_alias$"
+ | rename splunk_role AS roles
+ | fields + roles]
+ | dedup title
+ | rename title AS requestor_user 
+ | fields + requestor_user]
+|  dedup requestor_user
+|  fields requestor_user requestor_realname</query>
+      </search>
+      <delimiter> </delimiter>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="multiselect" token="status" searchWhenChanged="true">
+      <label>Status</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>status</fieldForLabel>
+      <fieldForValue>status</fieldForValue>
+      <default>*</default>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search data_id=* 
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup status
+| sort + status
+| table status</query>
+      </search>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="priority" searchWhenChanged="true">
+      <label>Priority</label>
+      <choice value="*">Any</choice>
+      <fieldForLabel>priority</fieldForLabel>
+      <fieldForValue>priority</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search origin=request status IN ($status$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup priority
+| sort + priority
+| table priority</query>
+      </search>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="use_case" searchWhenChanged="true">
+      <label>Use Case</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>use_case</fieldForLabel>
+      <fieldForValue>use_case</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search status IN ($status$) priority IN ($priority$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup use_case
+| sort use_case
+| fields + use_case</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="data_tags" searchWhenChanged="true">
+      <label>Data Tags</label>
+      <fieldForLabel>data_tags</fieldForLabel>
+      <fieldForValue>data_tags</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| rex mode=sed field=data_tags "s/,\s/,/g"
+| makemv delim="," data_tags
+| mvexpand data_tags
+| dedup data_tags
+| sort data_tags
+| fields + data_tags</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> </delimiter>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="custom_field" depends="$show_custom_field$">
+      <label>$custom_field_label$</label>
+      <fieldForLabel>custom_field</fieldForLabel>
+      <fieldForValue>custom_field</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data where custom_field != ""
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$) data_tags IN ($data_tags$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| mvexpand custom_field
+| dedup custom_field
+| fields custom_field</query>
+      </search>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <default>*</default>
+    </input>
+    <input type="time" token="timerange" searchWhenChanged="true">
+      <label>Time Range</label>
+      <default>
+        <earliest>0</earliest>
+        <latest></latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>All Request Activity</title>
+      <chart>
+        <search base="activity_base">
+          <query>| eval timestamp = strftime(timestamp,"%Y-%m-%d")
+| chart count OVER timestamp BY data_description
+| sort + timestamp</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisLabelsY.majorUnit">1</option>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">394</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Total</title>
+      <single>
+        <search base="activity_base">
+          <query>
+| stats count</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">69</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">requests</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Total Unassigned</title>
+      <single>
+        <search base="activity_base">
+          <query>| search admin_user="Unassigned"
+| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">65</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">requests</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Total Pending</title>
+      <single>
+        <search base="activity_base">
+          <query>
+| search status="Approval"
+| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">70</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">requests</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Total Self-Assigned</title>
+      <single>
+        <search>
+          <query>| inputlookup rqst_kv_data
+| where admin_user = requestor_user
+| stats count</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">68</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">requests</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Admin Workload</title>
+      <single>
+        <search base="activity_base">
+          <query>| stats count AS requests
+| eval admins = 
+    [| inputlookup rqst_kv_team
+    | search admin_user!="Unassigned"
+    | stats count AS admins 
+    | return $admins]
+| eval requests_per_admin = requests / admins
+| table requests_per_admin</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">66</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">requests / admin</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Request Users</title>
+      <single>
+        <search base="activity_base">
+          <query>
+| stats dc(requestor_user)</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">68</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">users</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Requests by Priority</title>
+      <chart>
+        <search base="activity_base">
+          <query>
+| top priority</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Requests by Use Case</title>
+      <chart>
+        <search base="activity_base">
+          <query>
+| top use_case</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Requests by Status</title>
+      <chart>
+        <search base="activity_base">
+          <query>
+| top status</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Requests by Data Transport</title>
+      <chart>
+        <search base="activity_base">
+          <query>
+| top data_transport</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Audit Trail by Time</title>
+      <table>
+        <search>
+          <query>| inputlookup rqst_kv_audit
+| addinfo
+| where ((timestamp &lt; info_max_time OR info_max_time="+Infinity") AND (timestamp &gt; info_min_time))
+| table timestamp data_id data_description user action_type action_detail
+| eval timestamp = strftime(timestamp,"%Y-%m-%d %H:%M:%S")
+| rename timestamp AS "Timestamp" data_id AS "Request ID" data_description AS "Request Description" user AS User action_type AS "Action Type" action_detail AS "Action Detail"
+| sort - timestamp</query>
+          <earliest>$timerange.earliest$</earliest>
+          <latest>$timerange.latest$</latest>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <drilldown>
+          <link target="_self">/app/rqst/admin_view_request_html?form.data_id=$row.Request%20ID$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

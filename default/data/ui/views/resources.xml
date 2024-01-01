@@ -1,0 +1,631 @@
+<form theme="dark">
+  <search id="resources_base">
+    <query>
+| inputlookup rqst_kv_data
+| eval data_tags=case(data_tags=="","Unassigned",isnotnull(data_tags),data_tags)
+| eval custom_field=case(custom_field=="","Unassigned",isnotnull(custom_field),custom_field)
+| rex mode=sed field=data_tags "s/,\s/,/g"
+| makemv delim="," data_tags
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$) data_tags IN ($data_tags$) custom_field="$custom_field$"
+[| rest /services/authentication/users
+ | search title IN ($requestor_user$)
+[| inputlookup rqst_kv_groups
+ | search group_alias IN ("$group_alias$")
+ | rename splunk_role AS roles
+ | fields + roles]
+ | dedup title
+ | rename title AS requestor_user 
+ | fields + requestor_user]
+| addinfo
+| eval timestamp = strptime(timestamp,"%Y-%m-%d %H:%M:%S")
+| where ((timestamp &lt; info_max_time OR info_max_time="+Infinity") AND (timestamp &gt; info_min_time))
+| table timestamp requestor_user admin_user requestor_realname data_id data_volume data_description  data_transport status priority due_date data_tags use_case
+    </query>
+    <earliest>$timerange.earliest$</earliest>
+    <latest>$timerange.latest$</latest>
+  </search>
+  <search>
+    <query>| inputlookup rqst_kv_options | head 1 | table custom_field_label custom_field_values show_custom_field</query>
+    <earliest>0</earliest>
+    <latest>now</latest>
+    <finalized>
+      <condition match=" 'job.resultCount' !=0">
+        <set token="custom_field_label">$result.custom_field_label$</set>
+        <set token="show_custom_field">true</set>
+      </condition>
+    </finalized>
+  </search>
+  <search>
+    <query>| inputlookup rqst_kv_options | head 1 | table show_custom_field</query>
+    <finalized>
+      <condition match="$result.show_custom_field$ == &quot;false&quot;">
+        <unset token="show_custom_field"></unset>
+      </condition>
+    </finalized>
+  </search>
+  <label>Resources</label>
+  <description>Estimate the impact of user requests on license, storage, and indexers with or without live data.</description>
+  <search id="option_search">
+    <query>| inputlookup rqst_kv_options | head 1</query>
+    <earliest>1</earliest>
+    <latest>now</latest>
+    <finalized>
+      <condition match=" 'job.resultCount' != 0">
+        <set token="indexer_daily_ingest_target">$result.indexer_daily_ingest_target$</set>
+        <set token="replication_factor">$result.replication_factor$</set>
+        <set token="search_factor">$result.search_factor$</set>
+      </condition>
+      <condition>
+        <set token="badness">1</set>
+      </condition>
+    </finalized>
+  </search>
+  <search id="live_data_search">
+    <query>
+index=_internal source="*license_usage.log" type=Usage
+| bin span=1d _time 
+| stats avg(b) AS b BY _time
+| eval GB=round(b/1024/1024/1024, 2)
+| stats avg(GB) AS GB
+| table GB
+| appendpipe [stats count | eval GB=0 | where count==0 | fields - count]
+    </query>
+    <earliest>-8d@d</earliest>
+    <latest>-1d@d</latest>
+    <finalized>
+      <condition match=" 'job.resultCount' != 0">
+        <set token="live_daily_ingest">$result.GB$</set>
+      </condition>
+      <condition>
+        <set token="badness">1</set>
+      </condition>
+    </finalized>
+  </search>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="dropdown" token="group_alias" searchWhenChanged="true">
+      <label>Group</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>group_alias</fieldForLabel>
+      <fieldForValue>group_alias</fieldForValue>
+      <search>
+        <query>| rest /services/authentication/users
+| search *
+    [| inputlookup rqst_kv_data 
+    | search origin=request
+    | rename requestor_user AS title
+    | table title]
+| dedup title
+| mvexpand roles
+| dedup roles
+| lookup rqst_kv_groups splunk_role AS roles OUTPUT group_alias
+| dedup group_alias
+| sort + group_alias
+| table group_alias</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+    <input type="multiselect" token="requestor_user" searchWhenChanged="true">
+      <label>Requestor</label>
+      <choice value="*">Any</choice>
+      <fieldForLabel>requestor_realname</fieldForLabel>
+      <fieldForValue>requestor_user</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search data_id = *
+    [| inputlookup rqst_kv_data
+    | search origin=request
+        [| rest /services/authentication/users
+        | search title=*
+            [| inputlookup rqst_kv_groups
+            | search group_alias = "$group_alias$"
+            | rename splunk_role AS roles
+            | fields + roles]
+        | dedup title
+        | rename title AS requestor_user 
+        | fields + requestor_user]]
+| dedup requestor_user
+| fields + requestor_user requestor_realname</query>
+      </search>
+      <delimiter> </delimiter>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="multiselect" token="status" searchWhenChanged="true">
+      <label>Status</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>status</fieldForLabel>
+      <fieldForValue>status</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search data_id=*
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup status
+| sort + status
+| table status</query>
+      </search>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="priority" searchWhenChanged="true">
+      <label>Priority</label>
+      <choice value="*">Any</choice>
+      <fieldForLabel>priority</fieldForLabel>
+      <fieldForValue>priority</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search origin=request status IN ($status$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup priority
+| sort + priority
+| table priority</query>
+      </search>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="use_case" searchWhenChanged="true">
+      <label>Use Case</label>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>use_case</fieldForLabel>
+      <fieldForValue>use_case</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search status IN ($status$) priority IN ($priority$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| dedup use_case
+| sort use_case
+| fields + use_case</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <delimiter> </delimiter>
+    </input>
+    <input type="multiselect" token="data_tags" searchWhenChanged="true">
+      <label>Data Tags</label>
+      <fieldForLabel>data_tags</fieldForLabel>
+      <fieldForValue>data_tags</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| rex mode=sed field=data_tags "s/,\s/,/g"
+| makemv delim="," data_tags
+| mvexpand data_tags
+| dedup data_tags
+| sort data_tags
+| fields + data_tags</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> </delimiter>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="custom_field" depends="$show_custom_field$">
+      <label>$custom_field_label$</label>
+      <fieldForLabel>custom_field</fieldForLabel>
+      <fieldForValue>custom_field</fieldForValue>
+      <search>
+        <query>| inputlookup rqst_kv_data where custom_field != ""
+| search status IN ($status$) priority IN ($priority$) use_case IN ($use_case$) data_tags IN ($data_tags$)
+    [| rest /services/authentication/users
+    | search title=$requestor_user$
+        [| inputlookup rqst_kv_groups
+        | search group_alias = "$group_alias$"
+        | rename splunk_role AS roles
+        | fields + roles]
+    | dedup title
+    | rename title AS requestor_user 
+    | fields + requestor_user]
+| mvexpand custom_field
+| dedup custom_field
+| fields custom_field</query>
+      </search>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+      <default>*</default>
+    </input>
+    <input type="dropdown" token="period" searchWhenChanged="true">
+      <label>Storage Calculation</label>
+      <choice value="365">Annually</choice>
+      <choice value="90">Quarterly</choice>
+      <choice value="30">Monthly</choice>
+      <choice value="1">Daily</choice>
+      <initialValue>365</initialValue>
+    </input>
+    <input type="text" token="indexer_daily_target" searchWhenChanged="true">
+      <label>Indexer Daily Target (GB/day)</label>
+      <default>$indexer_daily_ingest_target$</default>
+    </input>
+    <input type="text" token="replication_factor" searchWhenChanged="true">
+      <label>Replication Factor</label>
+      <default>$replication_factor$</default>
+    </input>
+    <input type="text" token="search_factor" searchWhenChanged="true">
+      <label>Search Factor</label>
+      <default>1</default>
+    </input>
+    <input type="text" token="compression_factor" searchWhenChanged="true">
+      <label>Compression Factor</label>
+      <default>.15</default>
+    </input>
+    <input type="text" token="metadata_factor" searchWhenChanged="true">
+      <label>Metadata Factor</label>
+      <default>.35</default>
+    </input>
+    <input type="time" token="timerange" searchWhenChanged="true">
+      <label>Request Time Range</label>
+      <default>
+        <earliest>0</earliest>
+        <latest></latest>
+      </default>
+    </input>
+    <input type="radio" token="live_data" searchWhenChanged="true">
+      <label></label>
+      <choice value="true">Include Live Data</choice>
+      <choice value="false">Exclude Live Data</choice>
+      <fieldForLabel>live_data</fieldForLabel>
+      <fieldForValue>live_data</fieldForValue>
+      <initialValue>true</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Live Daily License</title>
+      <single>
+        <search>
+          <query>| makeresults
+| eval actual_daily_ingest = $live_daily_ingest|s$
+| fields + actual_daily_ingest</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">75</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">GB</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Request License</title>
+      <single>
+        <search base="resources_base">
+          <query>
+| stats sum(data_volume)</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">58</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">GB/day</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Request Storage</title>
+      <single>
+        <search base="resources_base">
+          <query>
+| stats sum(data_volume) AS request_data_volume
+| eval rf_calc = case($replication_factor$&gt;1, $replication_factor$, $replication_factor$&lt;=1, "0")
+| eval sf_calc = case($search_factor$&gt;=1, $search_factor$, $search_factor$&lt;=1, "0")
+| eval request_raw_data = (request_data_volume * $compression_factor$)
+| eval request_repl_data = request_raw_data * rf_calc
+| eval request_searchable_data = ((request_data_volume * $metadata_factor$) + request_data_volume) * sf_calc
+| eval request_total_storage = round(request_repl_data + request_searchable_data,2) * $period$
+| eval request_total_storage = request_total_storage / 1024
+| stats sum(request_total_storage)</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">59</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">TB</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Current Indexers</title>
+      <single>
+        <search>
+          <query>| tstats count by splunk_server 
+| stats dc(splunk_server) as indexers 
+| table indexers</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">58</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">indexer(s)</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Indexer Load</title>
+      <single>
+        <search base="resources_base">
+          <query>
+| stats sum(data_volume) as request_data_volume
+| eval live_daily_ingest = $live_daily_ingest|s$ 
+| eval total_data_volume = case($live_data|s$ == "true",request_data_volume + live_daily_ingest, $live_data|s$ == "false",request_data_volume)
+| eval estimated_indexers = round((total_data_volume / $indexer_daily_target$), 1)
+| eval estimated_indexers = ceiling(estimated_indexers)
+| table estimated_indexers</query>
+        </search>
+        <option name="height">60</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">indexer(s)</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Ingest Per Indexer</title>
+      <single>
+        <search base="resources_base">
+          <query>
+| stats sum(data_volume) AS request_data_volume
+| eval live_daily_ingest = $live_daily_ingest|s$ 
+| eval total_data_volume = case($live_data|s$ == "true",request_data_volume + live_daily_ingest, $live_data|s$ == "false",request_data_volume)
+| eval estimated_indexers = round((total_data_volume / $indexer_daily_target$), 1)
+| eval estimated_indexers = ceiling(estimated_indexers)
+| eval data_volume_per_indexer = round(total_data_volume / estimated_indexers,2)
+| table data_volume_per_indexer</query>
+        </search>
+        <option name="height">60</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="underLabel">GB/day per indexer</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Requested Resources by User</title>
+      <chart>
+        <search base="resources_base">
+          <query>
+| eventstats sum(data_volume) AS request_data_volume BY data_id
+| eval rf_calc = case($replication_factor$&gt;1, $replication_factor$, $replication_factor$&lt;=1, "0")
+| eval sf_calc = case($search_factor$&gt;=1, $search_factor$, $search_factor$&lt;=1, "0")
+| eval request_raw_data = (request_data_volume * $compression_factor$)
+| eval request_repl_data = request_raw_data * rf_calc
+| eval request_searchable_data = ((request_data_volume * $metadata_factor$) + request_data_volume) * sf_calc
+| eval request_total_storage = round(request_raw_data + request_searchable_data,2) * $period$ / 1024
+| eval estimated_indexer_requirement = round((request_data_volume / $indexer_daily_target$), 1)
+| stats sum(request_data_volume) AS "Data (GB)" sum(request_total_storage) AS "Storage (TB)" sum(estimated_indexer_requirement) AS "Indexers (IDXL)" BY requestor_realname
+| sort - "Data (GB)"</query>
+        </search>
+        <option name="charting.axisTitleX.text">User</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">1</option>
+        <option name="height">367</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Projected License Consumption by Due Date</title>
+      <chart>
+        <search base="resources_base">
+          <progress>
+            <unset token="NOOP_1"></unset>
+          </progress>
+          <done>
+            <set token="NOOP_1">noop</set>
+          </done>
+          <query>
+| eval due_date_scope=strftime(now(), "%Y-%m-%d")
+| eval due_date_scope=strftime(now(), "%Y-%m-%d")
+| where due_date >= due_date_scope
+| sort + due_date
+| streamstats sum(data_volume) AS request_data_volume
+| stats sum(data_volume) as total_daily_volume by due_date
+| eval live_daily_ingest = case("true" == "true", "0", "true" == "false",0)
+| eval projected_daily_ingest = total_daily_volume + live_daily_ingest
+| streamstats sum(projected_daily_ingest) as total_volume
+| stats values(total_volume) AS "Total Volume (GB)" values(live_daily_ingest) AS "Live Data Approximation (GB)" by due_date</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Request Due Date</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">minimal</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Projected Resource Usage</title>
+      <table>
+        <search base="resources_base">
+          <query>| eval due_date_scope=strftime(now(), "%Y-%m-%d")
+| where due_date &gt;= due_date_scope
+| eval live_daily_ingest = case($live_data|s$ == "true", $live_daily_ingest|s$, $live_data|s$ == "false",0) 
+| sort + due_date
+| streamstats sum(data_volume) AS request_data_volume
+| eval projected_daily_ingest=request_data_volume + live_daily_ingest
+| eval rf_calc = case($replication_factor$&gt;1, $replication_factor$, $replication_factor$&lt;=1, "0")
+| eval sf_calc = case($search_factor$&gt;=1, $search_factor$, $search_factor$&lt;=1, "0")
+| eval request_raw_data = (request_data_volume * $compression_factor$)
+| eval request_repl_data = request_raw_data * rf_calc
+| eval request_searchable_data = ((request_data_volume * $metadata_factor$) + request_data_volume) * sf_calc
+| eval request_total_storage = round(request_repl_data + request_searchable_data,2) * $period$
+| eval request_total_storage = request_total_storage / 1024
+| eval estimated_indexers = round((projected_daily_ingest / $indexer_daily_target$), 2)
+| eventstats sum(request_total_storage) AS request_total_storage BY data_id
+| stats values(status) AS Status values(requestor_realname) AS Requestor values(data_description) AS Description values(use_case) AS "Use Case" values(data_tags) AS "Data Tags" values(priority) AS Priority values(data_volume) AS "Requested License" values(projected_daily_ingest) as "Projected Ingest" values(request_total_storage) AS "Projected Storage ($period$d)" values(estimated_indexers) AS "Projected Indexer Load" BY due_date data_id 
+| rename due_date AS "Due Date" data_id AS "ID"
+| sort + "Due Date" ID</query>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">row</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Request Data Volume">
+          <colorPalette type="minMidMax" maxColor="#006D9C" minColor="#3C444D"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="number" field="Cumulative Storage (365d)">
+          <option name="unit">TB</option>
+        </format>
+        <format type="number" field="Projected Daily Ingest">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="Cumulative Ingest">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="Cumulative Indexer Load">
+          <option name="unit">IDXL</option>
+        </format>
+        <format type="number" field="Projected Ingest">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="Projected Storage (365d)">
+          <option name="unit">TB</option>
+        </format>
+        <format type="number" field="Projected Indexer Load">
+          <option name="unit">IDXL</option>
+        </format>
+        <format type="number" field="Requested License">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/rqst/admin_view_request_html?form.data_id=$row.ID$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

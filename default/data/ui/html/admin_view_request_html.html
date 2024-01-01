@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Admin View Request</title>
+    <script>
+        document.title = "Admin View Request";
+    </script>
+    <link rel="shortcut icon" href="/en-US/static/@A14849BC7DD0A49696AD976A65513B64161C46F54CC292784FC0E790CF1CB8FC.529/img/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="{{SPLUNKWEB_URL_PREFIX}}/static/build/css/bootstrap-enterprise.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/chosen.css" />
+    <link rel="stylesheet" type="text/css" href="{{SPLUNKWEB_URL_PREFIX}}/static/build/css/splunkjs-dashboard.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/rqst.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/bootstrap-dark.css" />
+
+        <meta name="referrer" content="never" />
+        <meta name="referrer" content="no-referrer" />
+    
+          <script>
+                window._splunk_metrics_events = {
+                   push : function() {},
+                   active: false,
+                   }
+          </script>
+
+    <style>
+
+    #input1 {
+        display: none;
+    }
+
+    #row4 {
+        width: 1250px;
+        min-width: 1250px;
+        max-width: 1250px;
+        border-radius: 2.5px;
+        padding-top: 25px;
+        padding-left: 25px;
+        padding-right: 25px;
+        border: 1px solid #ccc;
+        margin-bottom: 40px;
+    }
+
+    textarea#admin_notes {
+        width: 950px !important;
+    }
+
+    select {
+        height: 37.5px !important;
+    }
+
+    .chosen-container-multi ul.chosen-choices, .chosen-container {
+        width: 950px !important;
+    }
+
+    </style>
+
+    </head>
+<body class="simplexml preload locale-en" data-splunk-version="7.1.0" data-splunk-product="enterprise">
+<!--
+BEGIN LAYOUT
+This section contains the layout for the dashboard. Splunk uses proprietary
+styles in <div> tags, similar to Bootstrap's grid system.
+-->
+<header>
+    <a aria-label="Screen reader users, click here to skip the navigation bar" class="navSkip" href="#navSkip" tabIndex="1">Skip Navigation &gt;</a>
+    <div class="header splunk-header">
+            <div id="placeholder-splunk-bar">
+                <a href="{{SPLUNKWEB_URL_PREFIX}}/app/launcher/home" class="brand" title="splunk &gt; listen to your data">splunk<strong>&gt;</strong></a>
+            </div>
+                <div id="placeholder-app-bar"></div>
+    </div>
+    <a id="navSkip"></a>
+</header>
+<div class="dashboard-body container-fluid main-section-body" data-role="main">
+    <div class="dashboard-header clearfix">
+        <h2>View Request</h2>
+    </div>
+    <div class="fieldset">
+        <div class="input input-dropdown" id="input1">
+            <label>Select Request</label>
+        </div>
+    </div>
+
+
+    <div id="row1" class="dashboard-row dashboard-row1">
+        <div id="panel1" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element1" class="dashboard-element html" style="width: 100%">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><h3><li class="icon-info-circle icon"></li> Request Information</h3><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel" style="min-height: 0 !important;"><div class="panel-body"><p><strong>Request ID:</strong> $data_id$</p><p><strong>Priority:</strong> $priority$</p><strong>Notes:</strong> $notes$</p></div></div></div><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Timestamp:</strong> $timestamp$</p><p><strong>Due Date:</strong> $due_date$</p></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row2" class="dashboard-row dashboard-row2">
+        <div id="panel2" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element2" class="dashboard-element html" style="width: 100%">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><h3><li class="icon-data icon"></li> Data Detail</h3><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Description:</strong> $data_description$</p><p><strong>Data Transport:</strong> $data_transport$</p><p><strong>Data Access:</strong> $data_group_access$</p><p><strong>Hostnames:</strong> <a href="$kvkit_server$$data_hostnames$" target="new">$data_hostnames_filename$</a></p></div></div></div><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Use Case:</strong> $use_case$</p><p><strong>Estimated Data Volume:</strong> $data_volume$ GB/day</p><p id="data_sample"><strong>Data Sample:</strong> <a href="$kvkit_server$$data_sample$" target="new">$data_sample_filename$</a></p><p id="custom_field" style="display: none;"><strong>$custom_field_label$:</strong> $custom_field$</p></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row3" class="dashboard-row dashboard-row3">
+        <div id="panel3" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element3" class="dashboard-element html" style="width: 100%">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><h3><li class="icon-user icon"></li> Requestor</h3><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Requestor:</strong> $requestor_realname$ ($requestor_user$)</p><p><strong>Splunk Role:</strong> $requestor_role_actual$</p></div></div></div><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Email:</strong> <a href="mailto:$requestor_email$">$requestor_email$</a></p><p><strong>Accessible Indexes</strong>: $requestor_indexes_actual$</p></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row4" class="dashboard-row dashboard-row4">
+            <h3><li class="icon-pencil icon"></li> Update Request</h3>
+
+        <div id="panel4" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element4" class="dashboard-element html" style="width: 100%">
+                        <div class="panel-body html">
+                                <div class="dashboard-row">
+                                <div class="dashboard-cell approver" style="width: 25%;"><div class="dashboard-panel" style="min-height: 75px !important;"><div class="panel-body"><p><strong>Status</p></strong><div class="form-group"><select id="status"><option value="" selected disabled>Select Status</option></select></div></div></div></div>
+                                <div class="dashboard-cell" style="width: 25%;"><div class="dashboard-panel" style="min-height: 75px !important;"><div class="panel-body"><p><strong>Admin Owner</p></strong><div class="form-group"><select id="admin_owner"><option value="" selected disabled>Select Admin Owner</option></select></div></div></div></div>
+                                <div class="dashboard-cell" style="width: 25%;"><div class="dashboard-panel" style="min-height: 75px !important;"><div class="panel-body"><p><strong>Configured Source Type</p></strong><div class="form-group"><select id="admin_sourcetype"><option value="" selected disabled>Select Sourcetype</option></select></div></div></div></div>
+                                <div class="dashboard-cell" style="width: 25%;"><div class="dashboard-panel" style="min-height: 75px !important;"><div class="panel-body"><p><strong>Configured Index</p><div class="form-group"><select id="admin_index"><option value="" selected disabled>Select Index</option></select></div></div></div></div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="row88" class="dashboard-row dashboard-row4">
+                <div id="panel88" class="dashboard-cell" style="width: 100%;">
+                    <div class="dashboard-panel clearfix">
+                        
+                        <div class="panel-element-row">
+                            <div id="element88" class="dashboard-element html" style="width: 100%">
+                                <div class="panel-body html">
+                                        <div class="dashboard-row"><div class="dashboard-cell" style="width: 25%;"><div class="dashboard-panel" style="min-height: 75px !important;"><div class="panel-body"><p><strong>Tags</p></strong><div class="form-group"><select id="data_tags" data-role="tagsinput" multiple></select></div></div></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+   
+    <div id="row5" class="dashboard-row dashboard-row5">
+        <div id="panel5" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element5" class="dashboard-element html" style="width: 100%">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><div class="dashboard-cell" style="width: 100%;"><div class="dashboard-panel" style="width: 100%;"><div class="panel-body" style="width: 100%;"><p><strong>Notes</strong> <span style="font-weight: 300;">(admins only)</span></p><div class="form-group"><textarea class="form-control" rows="5" id="admin_notes" style="width: 100%;"></textarea></div></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div id="row99" class="dashboard-row dashboard-row99">
+            <div id="panel6" class="dashboard-cell" style="width: 100%;">
+                <div class="dashboard-panel clearfix">
+                    <div class="panel-element-row">
+                        <div id="element99" class="dashboard-element html" style="width: 60%;">
+                            <div class="panel-body html">
+                                    <div class="dashboard-row"><div class="dashboard-cell" style="width: 100%;"><div class="dashboard-panel" style="width: 100%;"><div class="panel-body" style="width: 100%;">
+                                        <button id="submit_button" type="button" class="btn btn-primary submit">Update Request</button>
+                                    </div></div></div></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row6" class="dashboard-row dashboard-row6">
+        <div id="panel6" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                <h3 class="panel-title"><li class="icon-activity icon"></li> Request Activity</h3>
+                
+                <div class="panel-element-row">
+                    <div id="element6" class="dashboard-element table" style="width: 90%">
+                        <div class="panel-body"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row7" class="dashboard-row dashboard-row7">
+        <div id="panel7" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                <h3><li class="icon-list icon"></li> Admin Notes</h3>
+                
+                <div class="panel-element-row">
+                    <div id="element7" class="dashboard-element table" style="width: 90%">
+                        <div class="panel-body"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row8" class="dashboard-row dashboard-row8">
+        <div id="panel8" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                <div class="panel-element-row">
+                    <div id="element8" class="dashboard-element html" style="width: 60%;">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><div class="dashboard-cell" style="width: 100%;"><div class="dashboard-panel" style="width: 100%;"><div class="panel-body" style="width: 100%;">
+                                        <button type="button" class="btn btn-primary" onclick="window.history.go(-2)"><li class="icon-chevron-left icon"></li> Back</button><button id="reopen_button" type="button" class="btn btn-warning submit cancel_button"><li class="icon-warning icon warning"></li> Re-Open Request</button> 
+                                </div></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--
+END LAYOUT
+-->
+
+<script src="{{SPLUNKWEB_URL_PREFIX}}/config?autoload=1" crossorigin="use-credentials"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/static/js/i18n.js"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/i18ncatalog?autoload=1"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/static/build/simplexml/index.js"></script>
+<script src="/en-US/static/app/rqst/js/purify.js"></script>
+<script src="/en-US/static/app/rqst/dashboard.js"></script>
+<script src="/en-US/static/app/rqst/js/admin_view_request.js"></script>
+<script src="/en-US/static/app/rqst/js/chosen.jquery.js"></script>
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>View Request</title>
+    <script>
+        document.title = "View Request";
+    </script>
+    <link rel="shortcut icon" href="/en-US/static/@A14849BC7DD0A49696AD976A65513B64161C46F54CC292784FC0E790CF1CB8FC.529/img/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="{{SPLUNKWEB_URL_PREFIX}}/static/build/css/bootstrap-enterprise.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/chosen.css" />
+    <link rel="stylesheet" type="text/css" href="{{SPLUNKWEB_URL_PREFIX}}/static/build/css/splunkjs-dashboard.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/rqst.css" />
+    <link rel="stylesheet" type="text/css" href="/en-US/static/app/rqst/css/bootstrap-dark.css" />
+
+        <meta name="referrer" content="never" />
+        <meta name="referrer" content="no-referrer" />
+    
+          <script>
+                window._splunk_metrics_events = {
+                   push : function() {},
+                   active: false,
+                   }
+          </script>
+
+<style>
+
+    button {
+        margin-right: 0;
+        left: -10px;
+        position: relative;
+        display: inline-block;
+        margin-top: 20px !important;
+    }
+
+    .cancel_button {
+        left: -25px !important;
+        padding: 6px 15px !important;
+    }
+
+</style>
+
+    </head>
+<body class="simplexml preload locale-en" data-splunk-version="7.1.0" data-splunk-product="enterprise">
+<!--
+BEGIN LAYOUT
+This section contains the layout for the dashboard. Splunk uses proprietary
+styles in <div> tags, similar to Bootstrap's grid system.
+-->
+<header>
+    <a aria-label="Screen reader users, click here to skip the navigation bar" class="navSkip" href="#navSkip" tabIndex="1">Skip Navigation &gt;</a>
+    <div class="header splunk-header">
+            <div id="placeholder-splunk-bar">
+                <a href="{{SPLUNKWEB_URL_PREFIX}}/app/launcher/home" class="brand" title="splunk &gt; listen to your data">splunk<strong>&gt;</strong></a>
+            </div>
+                <div id="placeholder-app-bar"></div>
+    </div>
+    <a id="navSkip"></a>
+</header>
+<div class="dashboard-body container-fluid main-section-body" data-role="main">
+    <div class="dashboard-header clearfix">
+        <h2>View Request</h2>
+    </div>
+
+    <div id="row1" class="dashboard-row dashboard-row1">
+        <div id="panel1" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element1" class="dashboard-element html" style="width: 100%">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><h3><li class="icon-info-circle icon"></li> Request Information</h3><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel" style="min-height: 0 !important;"><div class="panel-body"><p><strong>Request ID:</strong> $data_id$</p><p><strong>Priority:</strong> $priority$</p><p><strong>Notes:</strong> $notes$</p></div></div></div><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Timestamp:</strong> $timestamp$</p><p><strong>Due Date:</strong> $due_date$</p></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row2" class="dashboard-row dashboard-row2">
+        <div id="panel2" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element2" class="dashboard-element html" style="width: 100%">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><h3><li class="icon-data icon"></li> Data Detail</h3><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Description:</strong> $data_description$</p><p><strong>Data Transport:</strong> $data_transport$</p><p><strong>Data Access:</strong> $data_group_access$</p><p><strong>Hostnames:</strong> $data_hostnames$</p></div></div></div><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Use Case:</strong> $use_case$</p><p><strong>Estimated Data Volume:</strong> $data_volume$ GB/day</p><p><strong>Data Sample:</strong> $data_sample$</p><p id="custom_field" style="display:none"><strong>$custom_field_label$:</strong> $custom_field$</p></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="row3" class="dashboard-row dashboard-row3">
+        <div id="panel3" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                
+                <div class="panel-element-row">
+                    <div id="element3" class="dashboard-element html" style="width: 100%">
+                        <div class="panel-body html">
+                                <div class="dashboard-row"><h3><li class="icon-gear icon"></li> Splunk Admin Details</h3><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Index:</strong> $admin_index$</p><p><strong>Data Tags:</strong> $data_tags$</p></div></div></div><div class="dashboard-cell" style="width: 50%;"><div class="dashboard-panel"><div class="panel-body"><p><strong>Sourcetype:</strong> $admin_sourcetype$</p><p><strong>Admin Owner:</strong> $admin_realname$ (<a href="$admin_email$">$admin_email$</a>)</p></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="row6" class="dashboard-row dashboard-row6">
+        <div id="panel6" class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel clearfix">
+                <h3><li class="icon-activity icon"></li> Request Activity</h3>
+                
+                <div class="panel-element-row">
+                    <div id="element6" class="dashboard-element table" style="width: 90%">
+                        <div class="panel-body"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="row99" class="dashboard-row dashboard-row99">
+            <div id="panel6" class="dashboard-cell" style="width: 100%;">
+                <div class="dashboard-panel clearfix">
+                    <div class="panel-element-row">
+                        <div id="element99" class="dashboard-element html" style="width: 60%;">
+                            <div class="panel-body html">
+                                    <div class="dashboard-row"><div class="dashboard-cell" style="width: 100%;"><div class="dashboard-panel" style="width: 100%;"><div class="panel-body" style="width: 100%;">
+                                            <button type="button" class="btn btn-primary" onclick="window.history.go(-2)"><li class="icon-chevron-left icon"></li> Back</button><button id="submit_button" type="button" class="btn btn-warning submit cancel_button"><li class="icon-warning icon warning"></li> Cancel Request</button> 
+                                    </div></div></div></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</div>
+
+<!--
+END LAYOUT
+-->
+
+<script src="{{SPLUNKWEB_URL_PREFIX}}/config?autoload=1" crossorigin="use-credentials"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/static/js/i18n.js"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/i18ncatalog?autoload=1"></script>
+<script src="{{SPLUNKWEB_URL_PREFIX}}/static/build/simplexml/index.js"></script>
+<script src="/en-US/static/app/rqst/js/purify.js"></script>
+<script src="/en-US/static/app/rqst/js/view_request.js"></script>
+<script src="/en-US/static/app/rqst/js/chosen.jquery.js"></script>
+<script src="/en-US/static/app/rqst/dashboard.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+// <![CDATA[
+//
+// LIBRARY REQUIREMENTS
+//
+// In the require function, we include the necessary libraries and modules for
+// the HTML dashboard. Then, we pass variable names for these libraries and
+// modules as function parameters, in order.
+//
+// When you add libraries or modules, remember to retain this mapping order
+// between the library or module and its function parameter. You can do this by
+// adding to the end of these lists, as shown in the commented examples below.
+
+require([
+    "splunkjs/mvc",
+    "splunkjs/mvc/utils",
+    "splunkjs/mvc/tokenutils",
+    "underscore",
+    "jquery",
+    "splunkjs/mvc/simplexml",
+    "splunkjs/mvc/layoutview",
+    "splunkjs/mvc/simplexml/dashboardview",
+    "splunkjs/mvc/simplexml/dashboard/panelref",
+    "splunkjs/mvc/simplexml/element/chart",
+    "splunkjs/mvc/simplexml/element/event",
+    "splunkjs/mvc/simplexml/element/html",
+    "splunkjs/mvc/simplexml/element/list",
+    "splunkjs/mvc/simplexml/element/map",
+    "splunkjs/mvc/simplexml/element/single",
+    "splunkjs/mvc/simplexml/element/table",
+    "splunkjs/mvc/simplexml/element/visualization",
+    "splunkjs/mvc/simpleform/formutils",
+    "splunkjs/mvc/simplexml/eventhandler",
+    "splunkjs/mvc/simplexml/searcheventhandler",
+    "splunkjs/mvc/simpleform/input/dropdown",
+    "splunkjs/mvc/simpleform/input/radiogroup",
+    "splunkjs/mvc/simpleform/input/linklist",
+    "splunkjs/mvc/simpleform/input/multiselect",
+    "splunkjs/mvc/simpleform/input/checkboxgroup",
+    "splunkjs/mvc/simpleform/input/text",
+    "splunkjs/mvc/simpleform/input/timerange",
+    "splunkjs/mvc/simpleform/input/submit",
+    "splunkjs/mvc/searchmanager",
+    "splunkjs/mvc/savedsearchmanager",
+    "splunkjs/mvc/postprocessmanager",
+    "splunkjs/mvc/simplexml/urltokenmodel"
+    // Add comma-separated libraries and modules manually here, for example:
+    // ..."splunkjs/mvc/simplexml/urltokenmodel",
+    // "splunkjs/mvc/tokenforwarder"
+    ],
+    function(
+        mvc,
+        utils,
+        TokenUtils,
+        _,
+        $,
+        DashboardController,
+        LayoutView,
+        Dashboard,
+        PanelRef,
+        ChartElement,
+        EventElement,
+        HtmlElement,
+        ListElement,
+        MapElement,
+        SingleElement,
+        TableElement,
+        VisualizationElement,
+        FormUtils,
+        EventHandler,
+        SearchEventHandler,
+        DropdownInput,
+        RadioGroupInput,
+        LinkListInput,
+        MultiSelectInput,
+        CheckboxGroupInput,
+        TextInput,
+        TimeRangeInput,
+        SubmitButton,
+        SearchManager,
+        SavedSearchManager,
+        PostProcessManager,
+        UrlTokenModel
+
+        // Add comma-separated parameter names here, for example:
+        // ...UrlTokenModel,
+        // TokenForwarder
+        ) {
+
+        var pageLoading = true;
+
+
+        //
+        // TOKENS
+        //
+
+        // Create token namespaces
+        var urlTokenModel = new UrlTokenModel();
+        mvc.Components.registerInstance('url', urlTokenModel);
+        var defaultTokenModel = mvc.Components.getInstance('default', {create: true});
+        var submittedTokenModel = mvc.Components.getInstance('submitted', {create: true});
+
+        urlTokenModel.on('url:navigate', function() {
+            defaultTokenModel.set(urlTokenModel.toJSON());
+            if (!_.isEmpty(urlTokenModel.toJSON()) && !_.all(urlTokenModel.toJSON(), _.isUndefined)) {
+                submitTokens();
+            } else {
+                submittedTokenModel.clear();
+            }
+        });
+
+        // Initialize tokens
+        defaultTokenModel.set(urlTokenModel.toJSON());
+
+        function submitTokens() {
+            // Copy the contents of the defaultTokenModel to the submittedTokenModel and urlTokenModel
+            FormUtils.submitForm({ replaceState: pageLoading });
+        }
+
+        function setToken(name, value) {
+            defaultTokenModel.set(name, value);
+            submittedTokenModel.set(name, value);
+        }
+
+        function unsetToken(name) {
+            defaultTokenModel.unset(name);
+            submittedTokenModel.unset(name);
+        }
+
+
+
+        //
+        // SEARCH MANAGERS
+        //
+
+        let option_search = new SearchManager({
+            "id": "option_search",
+            "search": "| inputlookup rqst_kv_options | rex mode=sed field=status \"s/,\\s/,/g\""
+        });
+
+        new SearchEventHandler({
+            managerid: "option_search",
+            event: "finalized",
+            conditions: [
+                {
+                    attr: "any",
+                    value: "*",
+                    actions: [
+                        {"type": "set", "token": "approval_process", "value": "$result.approval_process$"},
+                        {"type": "set", "token": "status_opts", "value": "$result.status$"},
+                        {"type": "set", "token": "email_notifications", "value": "$result.email_notifications$"},
+                        {"type": "set", "token": "email_new_request_user", "value": "$result.email_new_request_user$"},
+                        {"type": "set", "token": "email_new_request_approver", "value": "$result.email_new_request_approver$"},
+                        {"type": "set", "token": "email_new_request_admin", "value": "$result.email_new_request_admin$"},
+                        {"type": "set", "token": "email_updated_request_user", "value": "$result.email_updated_request_user$"},
+                        {"type": "set", "token": "show_custom_field", "value": "$result.show_custom_field$"},
+                        {"type": "set", "token": "custom_field_label", "value": "$result.custom_field_label$"}
+
+                    ]
+                }
+            ]
+        });
+var request_information = new SearchManager({
+            "id": "request_information",
+            "latest_time": "now",
+            "cancelOnUnload": true,
+            "status_buckets": 0,
+            "earliest_time": "0",
+            "search": "| inputlookup rqst_kv_data | search data_id = $data_id$      | lookup rqst_kv_team admin_user output admin_realname admin_email admin_phone     | eval admin_realname=if(isnull(admin_realname),\" \",admin_realname) | eval admin_email=if(isnull(admin_email),\" \",admin_email) | eval admin_index=if(isnull(admin_index),\"Unassigned\",admin_index)     | eval admin_sourcetype=if(isnull(admin_sourcetype),\"Unassigned\",admin_sourcetype)     | eval data_tags=if(isnull(data_tags),\"Unassigned\",data_tags)     | eval data_supporting_materials=if(isnull(data_supporting_materials),\" \",data_supporting_materials)     | eval notes=if(isnull(notes),\" \",notes)",
+            "sample_ratio": null,
+            "app": utils.getCurrentApp(),
+            "auto_cancel": 90,
+            "preview": true,
+            "tokenDependencies": {
+            },
+            "runWhenTimeIsUndefined": false
+        }, {tokens: true, tokenNamespace: "submitted"});
+
+        new SearchEventHandler({
+            managerid: "request_information",
+            event: "finalized",
+            conditions: [
+                {
+                    attr: "match",
+                    value: "'job.resultCount' != 0",
+                    actions: [
+                        {"type": "set", "token": "timestamp", "value": "$result.timestamp$"},
+                        {"type": "set", "token": "admin_index", "value": "$result.admin_index$"},
+                        {"type": "set", "token": "admin_email", "value": "$result.admin_email$"},
+                        {"type": "set", "token": "admin_notes", "value": "$result.admin_notes$"},
+                        {"type": "set", "token": "admin_phone", "value": "$result.admin_phone$"},
+                        {"type": "set", "token": "admin_realname", "value": "$result.admin_realname$"},
+                        {"type": "set", "token": "admin_sourcetype", "value": "$result.admin_sourcetype$"},
+                        {"type": "set", "token": "use_case", "value": "$result.use_case$"},
+                        {"type": "set", "token": "data_description", "value": "$result.data_description$"},
+                        {"type": "set", "token": "data_hostnames", "value": "$result.data_hostnames$"},
+                        {"type": "set", "token": "data_tags", "value": "$result.data_tags$"},
+                        {"type": "set", "token": "data_transport", "value": "$result.data_transport$"},
+                        {"type": "set", "token": "data_volume", "value": "$result.data_volume$"},
+                        {"type": "set", "token": "due_date", "value": "$result.due_date$"},
+                        {"type": "set", "token": "priority", "value": "$result.priority$"},
+                        {"type": "set", "token": "requestor_email", "value": "$result.requestor_email$"},
+                        {"type": "set", "token": "requestor_realname", "value": "$result.requestor_realname$"},
+                        {"type": "set", "token": "requestor_user", "value": "$result.requestor_user$"},
+                        {"type": "set", "token": "data_group_access", "value": "$result.data_group_access$"},
+                        {"type": "set", "token": "data_sample", "value": "$result.data_sample$"},
+                        {"type": "set", "token": "notes", "value": "$result.notes$"},
+                        {"type": "set", "token": "status", "value": "$result.status$"},
+                        {"type": "set", "token": "custom_field", "value": "$result.custom_field$"}
+                    ]
+                },
+                {
+                    attr: "any",
+                    value: "*",
+                    actions: [
+                        {"type": "set", "token": "request_information_badness", "value": "1"}
+                    ]
+                }
+            ]
+        });
+        
+var user_role_rights = new SearchManager({
+            "id": "user_role_rights",
+            "latest_time": "now",
+            "status_buckets": 0,
+            "cancelOnUnload": true,
+            "earliest_time": "0",
+            "sample_ratio": null,
+            "search": "| rest /services/authentication/users | rename title AS username roles AS role | search username=\"$requestor_user$\"  |  mvexpand role | fields realname username role | join type=outer role [ rest /services/authorization/roles | rename title AS role | eval indexes=mvjoin(srchIndexesAllowed,\", \") | fields role indexes] | table role indexes",
+            "app": utils.getCurrentApp(),
+            "auto_cancel": 90,
+            "preview": true,
+            "tokenDependencies": {
+            },
+            "runWhenTimeIsUndefined": false
+        }, {tokens: true, tokenNamespace: "submitted"});
+
+        new SearchEventHandler({
+            managerid: "user_role_rights",
+            event: "finalized",
+            conditions: [
+                {
+                    attr: "match",
+                    value: "'job.resultCount' != 0",
+                    actions: [
+                        {"type": "set", "token": "requestor_role_actual", "value": "$result.role$"},
+                        {"type": "set", "token": "requestor_indexes_actual", "value": "$result.indexes$"}
+                    ]
+                },
+                {
+                    attr: "any",
+                    value: "*",
+                    actions: [
+                        {"type": "set", "token": "user_role_rights_badness", "value": "1"}
+                    ]
+                }
+            ]
+        });
+        
+var search1 = new SearchManager({
+            "id": "search1",
+            "latest_time": "$latest$",
+            "status_buckets": 0,
+            "cancelOnUnload": true,
+            "earliest_time": "0",
+            "sample_ratio": 1,
+            "search": "| inputlookup rqst_kv_audit  | eval timestamp = strftime(timestamp,\"%Y-%m-%d %H:%M:%S\") | search data_id=$data_id$ | fields timestamp user action_type action_detail | rename timestamp AS Timestamp user AS User action_type as \"Action Type\" action_detail AS \"Action Detail\"",
+            "app": utils.getCurrentApp(),
+            "auto_cancel": 90,
+            "preview": true,
+            "tokenDependencies": {
+            },
+            "runWhenTimeIsUndefined": false
+        }, {tokens: true, tokenNamespace: "submitted"});
+        
+var search2 = new SearchManager({
+            "id": "search2",
+            "latest_time": "now",
+            "status_buckets": 0,
+            "cancelOnUnload": true,
+            "earliest_time": "-24h@h",
+            "sample_ratio": null,
+            "search": "| inputlookup rqst_kv_data | search requestor_user = $env:user$ | eval request_merged = \"(ID: \" . data_id . \") \" . timestamp  . \" \" . requestor_realname | table data_id request_merged | sort - data_id",
+            "app": utils.getCurrentApp(),
+            "auto_cancel": 90,
+            "preview": true,
+            "tokenDependencies": {
+            },
+            "runWhenTimeIsUndefined": false
+        }, {tokens: true});
+
+var search3 = new SearchManager({
+            "id": "search3",
+            "latest_time": "$latest$",
+            "status_buckets": 0,
+            "cancelOnUnload": true,
+            "earliest_time": "0",
+            "sample_ratio": 1,
+            "search": "| inputlookup rqst_kv_journal  | eval timestamp = strftime(timestamp,\"%Y-%m-%d %H:%M:%S\") | search data_id=$data_id$ | fields timestamp admin_user entry | rename timestamp AS Timestamp admin_user AS Admin entry AS Entry | sort - Timestamp",
+            "app": utils.getCurrentApp(),
+            "auto_cancel": 90,
+            "preview": true,
+            "tokenDependencies": {
+            },
+            "runWhenTimeIsUndefined": false
+        }, {tokens: true, tokenNamespace: "submitted"});
+        //
+        // SPLUNK LAYOUT
+        //
+
+        $('header').remove();
+        new LayoutView({"hideAppBar": false, "hideChrome": false, "hideSplunkBar": false})
+            .render()
+            .getContainerElement()
+            .appendChild($('.dashboard-body')[0]);
+
+        //
+        // DASHBOARD EDITOR
+        //
+
+        new Dashboard({
+            id: 'dashboard',
+            el: $('.dashboard-body'),
+            showTitle: true,
+            editable: true
+        }, {tokens: true}).render();
+
+
+        //
+        // VIEWS: VISUALIZATION ELEMENTS
+        //
+
+        var element1 = new HtmlElement({
+            "id": "element1",
+            "useTokens": true,
+            "el": $('#element1')
+        }, {tokens: true, tokenNamespace: "submitted"}).render();
+
+        DashboardController.addReadyDep(element1.contentLoaded());
+        
+        var element2 = new HtmlElement({
+            "id": "element2",
+            "useTokens": true,
+            "el": $('#element2')
+        }, {tokens: true, tokenNamespace: "submitted"}).render();
+
+        DashboardController.addReadyDep(element2.contentLoaded());
+
+        setTimeout(() => {
+            var opt_search = splunkjs.mvc.Components.getInstance("option_search");
+            var opt_results = opt_search.data("results");
+            opt_results.on("data", function(){
+                var keys = opt_results.data().fields;
+                var values = opt_results.data().rows;
+                var result = {};
+                keys.forEach((key, i) => result[key] = values[0][i]);
+                if(result["show_custom_field"] == "true"){
+                    document.getElementById("custom_field").style.display = "block";
+                }
+            });
+        }, 3000);
+        
+        var element3 = new HtmlElement({
+            "id": "element3",
+            "useTokens": true,
+            "el": $('#element3')
+        }, {tokens: true, tokenNamespace: "submitted"}).render();
+
+        DashboardController.addReadyDep(element3.contentLoaded());
+        
+        var element4 = new HtmlElement({
+            "id": "element4",
+            "useTokens": true,
+            "el": $('#element4')
+        }, {tokens: true, tokenNamespace: "submitted"}).render();
+
+        DashboardController.addReadyDep(element4.contentLoaded());
+        
+        var element5 = new HtmlElement({
+            "id": "element5",
+            "useTokens": true,
+            "el": $('#element5')
+        }, {tokens: true, tokenNamespace: "submitted"}).render();
+
+        DashboardController.addReadyDep(element5.contentLoaded());
+        
+        var element6 = new TableElement({
+            "id": "element6",
+            "count": 50,
+            "dataOverlayMode": "none",
+            "drilldown": "none",
+            "percentagesRow": "false",
+            "refresh.display": "none",
+            "rowNumbers": "false",
+            "totalsRow": "false",
+            "wrap": "true",
+            "managerid": "search1",
+            "el": $('#element6')
+        }, {tokens: true, tokenNamespace: "submitted"}).render();
+
+        var element7 = new TableElement({
+            "id": "element7",
+            "count": 50,
+            "dataOverlayMode": "none",
+            "drilldown": "none",
+            "percentagesRow": "false",
+            "refresh.display": "none",
+            "rowNumbers": "false",
+            "totalsRow": "false",
+            "wrap": "true",
+            "managerid": "search3",
+            "el": $('#element7')
+        }, {tokens: true, tokenNamespace: "submitted"}).render();
+
+        //
+        // VIEWS: FORM INPUTS
+        //
+
+        var input1 = new DropdownInput({
+            "id": "input1",
+            "choices": [],
+            "selectFirstChoice": false,
+            "showClearButton": true,
+            "labelField": "request_merged",
+            "valueField": "data_id",
+            "searchWhenChanged": true,
+            "value": "$form.data_id$",
+            "managerid": "search2",
+            "el": $('#input1')
+        }, {tokens: true}).render();
+
+        input1.on("change", function(newValue) {
+            FormUtils.handleValueChange(input1);
+        });
+        
+        
+
+        DashboardController.onReady(function() {
+            if (!submittedTokenModel.has('earliest') && !submittedTokenModel.has('latest')) {
+                submittedTokenModel.set({ earliest: '0', latest: '' });
+            }
+        });
+
+        // Initialize time tokens to default
+        if (!defaultTokenModel.has('earliest') && !defaultTokenModel.has('latest')) {
+            defaultTokenModel.set({ earliest: '0', latest: '' });
+        }
+
+        if (!_.isEmpty(urlTokenModel.toJSON())){
+            submitTokens();
+        }
+
+
+        //
+        // DASHBOARD READY
+        //
+
+        
+        DashboardController.ready();
+        pageLoading = false;
+
+        
+    }
+);
+// ]]>
+</script>
+</body>
+</html>
