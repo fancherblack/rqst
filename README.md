@@ -1,4 +1,5 @@
 # Overview
+Check [this page](https://redfactorapps.com/products/rqst/) for a summary of rqst's capabilities. 
 
 The rqst app provides new structure and visibility to Splunk project
 teams, admins, and users. It takes the place of the "tracker"
