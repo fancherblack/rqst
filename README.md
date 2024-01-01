@@ -231,7 +231,7 @@ use_case</td>
 #### Sharing
 Set the form sharing to **Open**.
 
-#### Public Template**
+#### Public Template
 Set the public template to *rqst*. This template controls the look and
 feel of the request form. Add your logo, update text, or completely
 change styling by editing &lt;KVKIT\_HOME&gt;/views/custom/rqst.
