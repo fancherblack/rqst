@@ -1,4 +1,4 @@
-#Overview
+# Overview
 
 The rqst app provides new structure and visibility to Splunk project
 teams, admins, and users. It takes the place of the "tracker"
@@ -14,7 +14,7 @@ organization.
 This document provides information relating to the installation and
 configuration of the rqst Splunk app.
 
-##Installation Quick Start
+## Installation Quick Start
 
 As a user with admin rights, perform the following on your search head:
 
@@ -50,7 +50,7 @@ As a user with admin rights, perform the following on your search head:
     the new request icon in the lower right of each dashboard in the
     rqst app.
 
-##kvkit Request Form Configuration
+## kvkit Request Form Configuration
 
 The kvkit application provides a tremendous amount of control over the
 request form configuration and layout. The options that follow are the
@@ -63,7 +63,7 @@ about the user are passed as tokens to the kvkit form. Thus submitted
 data will contain the requestor’s information even though it is not
 collected by the form.
 
-###Field-Specific Config
+### Field-Specific Config
 
 <table>
 <colgroup>
@@ -228,18 +228,18 @@ use_case</td>
 </tbody>
 </table>
 
-**Sharing**
+#### Sharing
 Set the form sharing to **Open**.
 
-**Public Template**
+#### Public Template**
 Set the public template to *rqst*. This template controls the look and
 feel of the request form. Add your logo, update text, or completely
 change styling by editing &lt;KVKIT\_HOME&gt;/views/custom/rqst.
 
-**Confirmation Page**
+#### Confirmation Page
 Set the confirmation page to *rqst-confirmation.*
 
-**Post-Process Search**
+#### Post-Process Search
 The following post-process search will log the request submission to the
 rqst\_audit collection:
 
@@ -248,13 +248,13 @@ action\_detail="Created request", action\_type="create", timestamp=now()
 | rename requestor\_user AS user | table action\_detail action\_type
 data\_id timestamp user | outputlookup append=true rqst\_kv\_audit
 
-Alternate Request Form (without kvkit)
+### Alternate Request Form (without kvkit)
 
 If you do not plan to use kvkit to serve the request form and would
 rather use the request form inside of Splunk, proceed with configuration
 as outlined under your preferred authentication option below.
 
-**Authentication Option 1: Hard-Coded**
+## Authentication Option 1: Hard-Coded
 -   Create a new role *rqst\_rest* with Splunk default *admin* role
     inheritance and the following capabilities: *rest\_\*.* Remove
     selected indexes from *Indexes searched by default* and *Selected
@@ -264,7 +264,7 @@ as outlined under your preferred authentication option below.
 
 -   Add the rqst\_rest password to bin/create\_request.py
 
-**Authentication Option 2: passwords.conf**
+## Authentication Option 2: passwords.conf**
 -   Create a new role *rqst\_rest* with Splunk default *admin* role
     inheritance and the following capabilities:
     *list\_storage\_passwords, rest\_\*.* Remove selected indexes from
@@ -307,7 +307,7 @@ curl -k -u admin:changeme
 https://localhost:8089/servicesNS/nobody/rqst/storage/passwords/\_acl -d
 perms.read=\* -d sharing=global
 
-**Dashboard Changes**
+### Dashboard Changes
 To make use of the Splunk-native (non-kvkit) request form in the rqst
 app do the following:
 
@@ -318,7 +318,7 @@ app do the following:
     script="js/request\_popper.js" from the opening form tag. The form
     tag will look like this once removed: &lt;form theme="dark"&gt;
 
-##Customization & Configuration Options
+## Customization & Configuration Options
 
 Certain aspects of rqst are driven by configurable options. The options
 shown below are set in the rqst\_options collection.
@@ -327,7 +327,8 @@ The email notification and approval process related options are not used
 by the kvkit application, as kvkit exposes and provides this
 functionality by way of form configuration.
 
-**approval\_process**  
+**approval\_process**
+
 Enable or disable the approval process. If set to "false", new requests
 will be set to a status of "New" and be immediately available to the
 admin team. If set to "true", new requests will be set to "Approval"
@@ -337,37 +338,44 @@ before being available to the admin team.
 Example value: true
 
 **priority**  
+
 List of options for the priority field on rqst dashboards.
 
 Example values: low, medium, high
 
 **status**  
+
 List of options for the status field on rqst dashboards.
 
 Required values: New, Approval, Hold, Rejected, Working, Complete
 
 **use\_case**  
+
 List of options for the use case field on rqst dashboards.
 
 Example values: security, it ops, server, mission, voice
 
 **data\_transport**
+
 List of options for the Data Transport field on rqst dashboards.
 
 Example values: Universal Forwarder, Heavy Forwarder, Syslog, API
 
 ****indexer\_daily\_ingest\_target**  
+
 Your target daily index volume in GB per indexer based on your Splunk
 environment (hardware, I/O, etc.) and application mix.
 
 Example value: 300
 
 **cost\_per\_license\_gb**
+
 The cost of license (GB) to be used in dashboard calculations.
 
 Example value: 5.50
 
 **cost\_per\_indexer**
+
 The cost of indexer resources to be used in dashboard calculations.
 Indexer resources, or Indexer Load (IDXL), is determined by requested
 license / indexer\_daily\_index\_target.
@@ -375,11 +383,13 @@ license / indexer\_daily\_index\_target.
 Example value: 15.25
 
 **cost\_per\_tb\_storage**
+
 The cost of storage (TB) to be used in dashboard calculations.
 
 Example value: 2.50
 
 **help\_url**
+
 The web address that the *Help* button links to in User Workspace.
 Consider setting this to an internal knowledgebase or intranet site
 containing information about your Splunk admin team and operations.
@@ -388,6 +398,7 @@ Example value:
 https://sharepoint.yourcompany.com/something/here/splunk-admin-team
 
 **email\_notifications**
+
 Enable or disable email notifications. If set to "true", email
 notifications will be sent to the admin team and users on request
 creation and update. If set to "false", email notifications will not be
@@ -396,38 +407,44 @@ sent.
 Example value: false
 
 **email\_server**
+
 Email server used for sending emails when requests are created/updated
 
 Example value: smtp.gmail.com:587
 
 **email\_new\_request\_user**
+
 Body of the email sent to the requestor upon request submission.
 
 Example value: Hey there user, thanks for your request. We’re on it!
 
 **email\_new\_request\_approver**
+
 If the approval process is enabled, the contents of the email sent to
 team members with approval authority for new requests.
 
 Example value: Hi approvers! Please do your thing.
 
 **email\_new\_request\_admin**
+
 If approval process is disabled, the contents of the email sent to
 admins once a request is created
 
 Example value: Hey admins! You’ve got more work to do.
 
 **email\_updated\_request\_user**
+
 Body of the email sent to a user when their request has been updated
 
 Example value: Dearest user, your request has been updated! Woo!
 
 **kvkit\_server**
+
 The address of your kvkit instance.
 
 Example value: https://kvkit.yourcompany.xyz:8008
 
-##KV Store Collections
+## KV Store Collections
 
 The rqst app leverages KV Store collections for all request operations.
 The table below lists the collections and their role:
@@ -477,7 +494,7 @@ request form.</td>
 </tbody>
 </table>
 
-##KV Store Backup
+## KV Store Backup
 
 Since all app data is stored in KV store collections and collections are
 susceptible to accidental deletion or overwrite (e.g., unintentional
@@ -489,7 +506,7 @@ Restore the KV
 store</u>](https://docs.splunk.com/Documentation/Splunk/7.2.3/Admin/BackupKVstore)
 in the Splunk docs.
 
-##Appendix A – Open Source Software
+## Appendix A – Open Source Software
 
 The rqst app leverages the software identified in the table below.
 
